@@ -23,7 +23,7 @@ public class TapToPlace : MonoBehaviour
 
     private bool canSpawn = true;
     private bool uiBlock = false;
-    private bool spawnLock = false; // 🔥 FIX: prevents double spawn
+    private bool spawnLock = false; 
 
     private static List<ARRaycastHit> hits = new();
 
@@ -37,8 +37,7 @@ public class TapToPlace : MonoBehaviour
         HandleTouchManipulation();
     }
 
-    // ---------------- SPAWN ----------------
-    void HandleSpawn()
+    // SPAWN 
     {
         if (!canSpawn || spawnedObject != null || uiBlock || spawnLock)
             return;
@@ -54,7 +53,7 @@ public class TapToPlace : MonoBehaviour
 
             if (touch.phase == TouchPhase.Began)
             {
-                spawnLock = true; // 🔥 lock immediately
+                spawnLock = true; 
                 TryPlace(touch.position);
             }
         }
@@ -66,7 +65,7 @@ public class TapToPlace : MonoBehaviour
                 EventSystem.current.IsPointerOverGameObject())
                 return;
 
-            spawnLock = true; // 🔥 lock immediately
+            spawnLock = true;
             TryPlace(Input.mousePosition);
         }
 
@@ -95,7 +94,7 @@ public class TapToPlace : MonoBehaviour
         }
     }
 
-    // ---------------- SCALE + ROTATE ----------------
+    // SCALE + ROTATE
     void HandleTouchManipulation()
     {
         if (spawnedObject == null) return;
@@ -132,11 +131,11 @@ public class TapToPlace : MonoBehaviour
         }
     }
 
-    // ---------------- OBJECT SELECT ----------------
+    //  OBJECT SELECT 
     public void SelectObject1() => selectedObject = object1;
     public void SelectObject2() => selectedObject = object2;
 
-    // ---------------- DELETE ALL ----------------
+    // DELETE ALL
     public void RemoveSpawnedObject()
     {
         GameObject[] all = GameObject.FindGameObjectsWithTag("SpawnedObject");
@@ -148,7 +147,7 @@ public class TapToPlace : MonoBehaviour
 
         spawnedObject = null;
         canSpawn = true;
-        spawnLock = false; // 🔥 IMPORTANT FIX
+        spawnLock = false; 
 
         if (placementManager != null)
             placementManager.SetPlacedObject(null);
@@ -159,7 +158,7 @@ public class TapToPlace : MonoBehaviour
         Debug.Log("All spawned objects deleted + reset");
     }
 
-    // ---------------- UI SAFETY HOOK ----------------
+    // UI SAFETY HOOK
     public void BlockUIForOneFrame()
     {
         StartCoroutine(UIBlockFrame());
