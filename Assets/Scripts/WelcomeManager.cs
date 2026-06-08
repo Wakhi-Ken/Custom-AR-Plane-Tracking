@@ -16,10 +16,18 @@ public class WelcomeManager : MonoBehaviour
 
     private bool isTransparent = false;
 
+    private const string TRANSPARENCY_KEY = "UI_Transparency";
+
     void Start()
     {
         welcomePanel.SetActive(true);
         instructionsPanel.SetActive(false);
+
+        // LOAD saved setting
+        isTransparent = PlayerPrefs.GetInt(TRANSPARENCY_KEY, 0) == 1;
+
+        ApplyAlpha(welcomePanelImage);
+        ApplyAlpha(instructionsPanelImage);
     }
 
     public void StartApp()
@@ -40,10 +48,14 @@ public class WelcomeManager : MonoBehaviour
         welcomePanel.SetActive(true);
     }
 
-    // FUNCTIONAL UI ELEMENT (TOGGLE)
+    // FUNCTIONAL UI ELEMENT (TOGGLE + SAVE)
     public void ToggleTransparency()
     {
         isTransparent = !isTransparent;
+
+        // SAVE setting
+        PlayerPrefs.SetInt(TRANSPARENCY_KEY, isTransparent ? 1 : 0);
+        PlayerPrefs.Save();
 
         ApplyAlpha(welcomePanelImage);
         ApplyAlpha(instructionsPanelImage);
@@ -57,6 +69,4 @@ public class WelcomeManager : MonoBehaviour
         c.a = isTransparent ? transparentAlpha : solidAlpha;
         img.color = c;
     }
-
-    
 }

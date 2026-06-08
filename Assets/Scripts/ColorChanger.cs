@@ -7,6 +7,8 @@ public class ColorChanger : MonoBehaviour
 
     public Slider colorSlider;
 
+    private const string COLOR_KEY = "SavedColorValue";
+
     public void SetObject(GameObject obj)
     {
         currentObject = obj;
@@ -14,13 +16,29 @@ public class ColorChanger : MonoBehaviour
 
     void Start()
     {
+        // Load saved value
+        float savedValue = PlayerPrefs.GetFloat(COLOR_KEY, 0f);
+
         if (colorSlider != null)
         {
+            colorSlider.value = savedValue;
             colorSlider.onValueChanged.AddListener(OnSliderChanged);
         }
+
+        // Apply saved color if object exists
+        ApplyColor(savedValue);
     }
 
     public void OnSliderChanged(float value)
+    {
+        // Save value every change
+        PlayerPrefs.SetFloat(COLOR_KEY, value);
+        PlayerPrefs.Save();
+
+        ApplyColor(value);
+    }
+
+    void ApplyColor(float value)
     {
         if (currentObject == null) return;
 
@@ -28,7 +46,6 @@ public class ColorChanger : MonoBehaviour
 
         if (rend != null)
         {
-            // Convert slider value to HSV color
             Color newColor = Color.HSVToRGB(value, 1f, 1f);
 
             rend.material = new Material(rend.material);
