@@ -1,9 +1,8 @@
-﻿using UnityEngine;
-using UnityEngine.XR.ARFoundation;
-using UnityEngine.XR.ARSubsystems;
-using UnityEngine.EventSystems;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.XR.ARFoundation;
 
 public class TapToPlace : MonoBehaviour
 {
@@ -23,7 +22,7 @@ public class TapToPlace : MonoBehaviour
 
     private bool canSpawn = true;
     private bool uiBlock = false;
-    private bool spawnLock = false; 
+    private bool spawnLock = false;
 
     private static List<ARRaycastHit> hits = new();
 
@@ -37,12 +36,13 @@ public class TapToPlace : MonoBehaviour
         HandleTouchManipulation();
     }
 
-    // SPAWN 
+    // SPAWN
+    void HandleSpawn()
     {
         if (!canSpawn || spawnedObject != null || uiBlock || spawnLock)
             return;
 
-        // TOUCH
+        // Touch Input
         if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
@@ -53,12 +53,12 @@ public class TapToPlace : MonoBehaviour
 
             if (touch.phase == TouchPhase.Began)
             {
-                spawnLock = true; 
+                spawnLock = true;
                 TryPlace(touch.position);
             }
         }
 
-        // MOUSE (Editor testing)
+        // Mouse Input (Editor Testing)
         if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current != null &&
@@ -69,7 +69,7 @@ public class TapToPlace : MonoBehaviour
             TryPlace(Input.mousePosition);
         }
 
-        // unlock after frame ends
+        // Unlock after release
         if (Input.touchCount == 0 && !Input.GetMouseButton(0))
         {
             spawnLock = false;
@@ -78,14 +78,19 @@ public class TapToPlace : MonoBehaviour
 
     void TryPlace(Vector2 screenPosition)
     {
-        if (selectedObject == null) return;
+        if (selectedObject == null)
+            return;
 
-        if (raycastManager.Raycast(screenPosition, hits, TrackableType.PlaneWithinPolygon))
+        if (raycastManager.Raycast(screenPosition, hits, UnityEngine.XR.ARSubsystems.TrackableType.PlaneWithinPolygon))
         {
             Pose pose = hits[0].pose;
             pose.position += Vector3.up * spawnHeightOffset;
 
-            spawnedObject = Instantiate(selectedObject, pose.position, pose.rotation);
+            spawnedObject = Instantiate(
+                selectedObject,
+                pose.position,
+                pose.rotation
+            );
 
             canSpawn = false;
 
@@ -97,7 +102,8 @@ public class TapToPlace : MonoBehaviour
     // SCALE + ROTATE
     void HandleTouchManipulation()
     {
-        if (spawnedObject == null) return;
+        if (spawnedObject == null)
+            return;
 
         if (Input.touchCount == 2)
         {
@@ -122,43 +128,57 @@ public class TapToPlace : MonoBehaviour
                 spawnedObject.transform.localScale = initialScale * scaleFactor;
             }
 
-            Vector2 prevDir = (t1.position - t1.deltaPosition) - (t2.position - t2.deltaPosition);
-            Vector2 currDir = t1.position - t2.position;
+            Vector2 prevDir =
+                (t1.position - t1.deltaPosition) -
+                (t2.position - t2.deltaPosition);
+
+            Vector2 currDir =
+                t1.position - t2.position;
 
             float angle = Vector2.SignedAngle(prevDir, currDir);
 
-            spawnedObject.transform.Rotate(0f, -angle * rotationSpeed, 0f);
+            spawnedObject.transform.Rotate(
+                0f,
+                -angle * rotationSpeed,
+                0f,
+                Space.World
+            );
         }
     }
 
-    //  OBJECT SELECT 
-    public void SelectObject1() => selectedObject = object1;
-    public void SelectObject2() => selectedObject = object2;
+    // OBJECT SELECTION
+    public void SelectObject1()
+    {
+        selectedObject = object1;
+    }
 
-    // DELETE ALL
+    public void SelectObject2()
+    {
+        selectedObject = object2;
+    }
+
+    // DELETE OBJECTS
     public void RemoveSpawnedObject()
     {
-        GameObject[] all = GameObject.FindGameObjectsWithTag("SpawnedObject");
+        GameObject[] allObjects =
+            GameObject.FindGameObjectsWithTag("SpawnedObject");
 
-        foreach (GameObject obj in all)
+        foreach (GameObject obj in allObjects)
         {
             Destroy(obj);
         }
 
         spawnedObject = null;
         canSpawn = true;
-        spawnLock = false; 
+        spawnLock = false;
 
-        if (placementManager != null)
-            placementManager.SetPlacedObject(null);
+        placementManager?.SetPlacedObject(null);
+        colorChanger?.SetObject(null);
 
-        if (colorChanger != null)
-            colorChanger.SetObject(null);
-
-        Debug.Log("All spawned objects deleted + reset");
+        Debug.Log("All spawned objects deleted and reset.");
     }
 
-    // UI SAFETY HOOK
+    // UI SAFETY
     public void BlockUIForOneFrame()
     {
         StartCoroutine(UIBlockFrame());
